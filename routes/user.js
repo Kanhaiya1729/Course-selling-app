@@ -5,7 +5,8 @@ const bcrypt=require('bcrypt');
 const jwt =require('jsonwebtoken');
 const JWT_USER_PASSWORD="ballia123"
 const userRouter=Router();
-const { userModel } = require("../db");
+const {courseModel, userModel, purchaseModel } = require("../db");
+const {userMiddleware}=require("../middleware/user");
 
 userRouter.post("/signup",async function(req,res){
     //validate
@@ -34,7 +35,9 @@ userRouter.post("/signup",async function(req,res){
     password:hashedPass
   })
     res.status(201).json({
-    message:"you are signed up!"
+    message:"you are signed up!",
+     purchases:purchases,
+        courseData:courseData
 })
 
 }catch(err){
@@ -82,9 +85,18 @@ userRouter.post("/signin",async function(req,res){
   }
      
 });
-userRouter.get("/user /purchases",function(req,res){
+userRouter.get("/purchases",userMiddleware,async function(req,res){
+    const userId=req.userId;
+    const purchases=await purchaseModel.find({
+        userId
+    })
+    const courseData=await courseModel.find({
+           _id:{ $in: purchases.map(x => x.courseId)}
+    })
     res.json({
-        message:"you are signed in"
+        message:"you are signed in",
+        purchases:purchases,
+        courseData:courseData
     })
 
 })

@@ -6,7 +6,7 @@ const jwt=require('jsonwebtoken');
 const {z}=require('zod');
 const JWT_ADMIN_PASSWORD="beta2345"
 const adminRouter=Router();
-const {adminMiddleware}=require('../middleware')
+const {adminMiddleware}=require("../middleware/admin")
 
 adminRouter.post("/signup",async function(req,res){
    //validate
@@ -57,7 +57,7 @@ adminRouter.post("/signin",async function(req,res){
             message:"incorrect credentials"
         });
     }
-    const MatchPassword=await bcrypt.compare(password,user.password);
+  const MatchPassword=await bcrypt.compare(password,user.password);
   if(!MatchPassword){
    return res.json({
         message:"incorrect credentials"
@@ -83,7 +83,7 @@ adminRouter.post("/signin",async function(req,res){
 });
 
 
-adminRouter.put("/courses",adminMiddleware, async function(req,res){
+adminRouter.post("/course",adminMiddleware, async function(req,res){
     const adminId=req.userId;
     const {title,description,imageUrl,price}=req.body;
     const course= await courseModel.create({
@@ -101,10 +101,39 @@ adminRouter.put("/courses",adminMiddleware, async function(req,res){
     })
 
 })
-adminRouter.get("/courses/bulk",function(req,res){
-    res,json({
-        message:"signed up!"
+adminRouter.put("/course",adminMiddleware, async function(req,res){
+    const adminId=req.userId;
+    const {courseId,title,description,imageUrl,price}=req.body;
+
+    const course= await courseModel.updateOne({
+        _id:courseId,
+        creatorId:adminId},
+        {
+        title:title,
+        description:description,
+        imageUrl:imageUrl,
+        price,
+        creatorId:adminId
+        
+
     })
+    res.json({
+        message:"course updated",
+        courseId:course._id
+
+    })
+
+})
+adminRouter.get("/course/bulk",adminMiddleware,async function(req,res){
+        const adminId=req.userId;
+        const course= await courseModel.find({
+        creatorId:adminId});
+        res.json({
+        message:"course updated",
+        course:course
+
+    })
+    
 })
 
 module.exports={
